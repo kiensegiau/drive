@@ -1,7 +1,8 @@
 const puppeteer = require('puppeteer');
-const axios = require('axios');
+const util = require('util');
 const fs = require('fs');
 const path = require('path');
+const axios = require('axios');
 const { exec } = require('child_process');
 
 // Cấu hình
@@ -10,6 +11,15 @@ const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB mỗi chunk
 const MAX_CONCURRENT_CHUNKS = 16; // 16 luồng
 const RETRY_TIMES = 3;
 const RETRY_DELAY = 1000;
+
+const VIDEO_ITAGS = {
+    '137': '1080p',
+    '136': '720p',
+    '135': '480p', 
+    '134': '360p',
+    '133': '240p',
+    '160': '144p'
+};
 
 if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -201,7 +211,7 @@ async function mergeVideoAudio() {
                 const finalSize = fs.statSync(outputPath).size;
                 console.log(`📦 File cuối: ${(finalSize/1024/1024).toFixed(1)}MB`);
 
-                // Xóa files tạm
+                // Xóa files tm
                 fs.unlinkSync(videoPath);
                 fs.unlinkSync(audioPath);
                 resolve();
@@ -218,90 +228,92 @@ async function mergeVideoAudio() {
     });
 }
 
-// Thêm vào trước phần gọi hàm
+const userDataDir = path.join(__dirname, 'chrome-data'); // Thư mục lưu profile
+
 async function getVideoUrl() {
-    const browser = await puppeteer.launch({
-        headless: false,
-        defaultViewport: null
-    });
-    
-    page = await browser.newPage();
-    
     try {
-        const fileId = '1yLT3ce__JtXLeQv9A9uG5KgY9Vx-YGwJ';
-        const videoUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-        
-        console.log('🚀 Bắt đầu quá trình...');
-        console.log('📌 URL video:', videoUrl);
-
-        let videoStream = null;
-        let audioStream = null;
-        let downloadComplete = false;
-        
-        await page.setRequestInterception(true);
-        
-        page.on('request', async request => {
-            const url = request.url();
-            
-            if (url.includes('videoplayback')) {
-                try {
-                    const baseUrl = url.split('&range=')[0];
-                    const params = new URLSearchParams(url);
-                    const itag = params.get('itag');
-                    
-                    if (itag === '136' && !videoStream) {
-                        videoStream = baseUrl;
-                    } else if (itag === '140' && !audioStream) {
-                        audioStream = baseUrl;
-                    }
-
-                    if (videoStream && audioStream && !isDownloading) {
-                        isDownloading = true;
-                        try {
-                            await Promise.all([
-                                downloadVideo(videoStream, 'temp_video.mp4'),
-                                downloadVideo(audioStream, 'temp_audio.mp4')
-                            ]);
-                            
-                            await mergeVideoAudio();
-                            downloadComplete = true;
-                            await browser.close();
-                            process.exit(0);
-                        } catch (error) {
-                            console.error('❌ Lỗi:', error.message);
-                            await browser.close();
-                            process.exit(1);
-                        }
-                    }
-                } catch (e) {
-                    console.error('❌ Lỗi:', e.message);
-                }
-            }
-            request.continue();
+        console.log('🚀 Khởi động trình duyệt...');
+        const browser = await puppeteer.launch({
+            headless: false,
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-web-security',
+                '--disable-features=IsolateOrigins,site-per-process',
+                '--flag-switches-begin',
+                '--flag-switches-end',
+                `--window-size=1920,1080`,
+                '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+            ],
+            defaultViewport: {
+                width: 1920,
+                height: 1080
+            },
+            userDataDir: userDataDir,
+            ignoreDefaultArgs: ['--enable-automation']
         });
+        
+        page = await browser.newPage();
 
+        // Truy cập URL video Drive
+        const videoUrl = 'https://drive.google.com/file/d/1MW8mOl7iyQQyhYWg7y2_HIUwplgMlsXw/view?usp=drive_link';
+        console.log('🌐 Đang truy cập video...');
+        
         await page.goto(videoUrl, {
             waitUntil: 'networkidle0',
             timeout: 60000
         });
 
-        // Click để kích hoạt player
-        try {
-            const frame = await page.waitForSelector('iframe[src*="drive.google.com"]');
-            const contentFrame = await frame.contentFrame();
-            await contentFrame.waitForSelector('video');
-            await contentFrame.click('video');
-        } catch (e) {
-            console.log('⚠️ Không thể click vào video, nhưng vẫn tiếp tục...');
-        }
+        console.log('⏳ Đang đợi video load...');
+        const previewFrame = await page.waitForSelector('iframe[src*="drive.google.com"]');
+        const contentFrame = await previewFrame.contentFrame();
 
-        // Chờ cho đến khi tải xong
-        while (!downloadComplete) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            if (!videoStream || !audioStream) {
-                console.log('⏳ Đang đợi stream...');
+        // Tìm URL trực tiếp từ source
+        const videoData = await contentFrame.evaluate(() => {
+            const ytPlayer = document.querySelector('#movie_player');
+            if (ytPlayer && ytPlayer.getAvailableQualityLevels) {
+                const qualities = ytPlayer.getAvailableQualityLevels();
+                const config = ytPlayer.getPlayerResponse();
+                return {
+                    qualities: qualities,
+                    streamingData: config.streamingData
+                };
+            }
+            return null;
+        });
+
+        if (videoData && videoData.streamingData) {
+            const { formats, adaptiveFormats } = videoData.streamingData;
+            
+            // Tìm video stream chất lượng cao nhất
+            let bestVideoStream = null;
+            let audioStream = null;
+
+            for (const format of adaptiveFormats) {
+                if (format.mimeType.includes('video/mp4')) {
+                    if (!bestVideoStream || format.height > bestVideoStream.height) {
+                        bestVideoStream = format;
+                    }
+                } else if (format.mimeType.includes('audio/mp4') && !audioStream) {
+                    audioStream = format;
+                }
+            }
+
+            if (bestVideoStream && audioStream) {
+                console.log(`🎥 Đã tìm thấy video stream (${bestVideoStream.height}p)`);
+                console.log(`🔊 Đã tìm thấy audio stream`);
+
+                console.log(`\n📺 Tải video với độ phân giải ${bestVideoStream.height}p`);
+                await downloadVideo(bestVideoStream.url, 'temp_video.mp4');
+                await downloadVideo(audioStream.url, 'temp_audio.mp4');
+                await mergeVideoAudio();
+                return;
             }
         }
+
+        // Nếu không tìm được URL trực tiếp, fallback về cách cũ
+        console.log('⚠️ Không tìm được URL trực tiếp, thử phương pháp khác...');
+        // ... code cũ ...
 
     } catch (error) {
         console.error('❌ Lỗi:', error.message);

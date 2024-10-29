@@ -1,0 +1,14 @@
+2024/10/29-08:34:08.433 8654 Reusing MANIFEST C:\NEXT\drive\drive-downloader\chrome-data\Default\WebStorage\3\IndexedDB\indexeddb.leveldb/MANIFEST-000001
+2024/10/29-08:34:08.434 8654 Recovering log #50
+2024/10/29-08:34:08.434 8654 Reusing old log C:\NEXT\drive\drive-downloader\chrome-data\Default\WebStorage\3\IndexedDB\indexeddb.leveldb/000050.log 
+2024/10/29-08:34:08.434 8654 Delete type=2 #48
+2024/10/29-08:34:08.529 8654 Level-0 table #55: started
+2024/10/29-08:34:08.533 8654 Level-0 table #55: 5011 bytes OK
+2024/10/29-08:34:08.536 8654 Delete type=0 #50
+2024/10/29-08:34:08.537 8654 Manual compaction at level-0 from '\x00\x10\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x11\x00\x00\x00' @ 0 : 0; will stop at '\x00\x10\x01\x1f\x04\x03\x01\x03\x00N\x00E\x00W\x03\x00\x00\x00\x00\x00\x00L@\x03\x00\xd0\x89h^-yB\x00\x03\x00\x00\x00\x00\x00\x00\xf0?' @ 1764 : 1
+2024/10/29-08:34:08.537 8654 Compacting 1@0 + 1@1 files
+2024/10/29-08:34:08.547 8654 Generated table #56@0: 136 keys, 2132 bytes
+2024/10/29-08:34:08.547 8654 Compacted 1@0 + 1@1 files => 2132 bytes
+2024/10/29-08:34:08.548 8654 compacted to: files[ 0 1 1 0 0 0 0 ]
+2024/10/29-08:34:08.548 8654 Delete type=2 #55
+2024/10/29-08:34:08.548 8654 Manual compaction at level-0 from '\x00\x10\x01\x1f\x04\x03\x01\x03\x00N\x00E\x00W\x03\x00\x00\x00\x00\x00\x00L@\x03\x00\xd0\x89h^-yB\x00\x03\x00\x00\x00\x00\x00\x00\xf0?' @ 1764 : 1 .. '\x00\x11\x00\x00\x00' @ 0 : 0; will stop at (end)

@@ -1,0 +1,14 @@
+2024/10/29-08:34:31.258 983c Reusing MANIFEST C:\NEXT\drive\drive-downloader\chrome-data\Default\WebStorage\3\IndexedDB\indexeddb.leveldb/MANIFEST-000001
+2024/10/29-08:34:31.259 983c Recovering log #54
+2024/10/29-08:34:31.259 983c Reusing old log C:\NEXT\drive\drive-downloader\chrome-data\Default\WebStorage\3\IndexedDB\indexeddb.leveldb/000054.log 
+2024/10/29-08:34:31.260 983c Delete type=2 #52
+2024/10/29-08:34:31.334 2a08 Level-0 table #59: started
+2024/10/29-08:34:31.339 2a08 Level-0 table #59: 5024 bytes OK
+2024/10/29-08:34:31.341 2a08 Delete type=0 #54
+2024/10/29-08:34:31.351 8e54 Manual compaction at level-0 from '\x00\x11\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x12\x00\x00\x00' @ 0 : 0; will stop at '\x00\x11\x01\x1f\x04\x03\x01\x03\x00N\x00E\x00W\x03\x00\x00\x00\x00\x00\x00L@\x03\x00 @\x8b^-yB\x00\x03\x00\x00\x00\x00\x00\x00\xf0?' @ 1882 : 1
+2024/10/29-08:34:31.351 8e54 Compacting 1@0 + 1@1 files
+2024/10/29-08:34:31.370 8e54 Generated table #60@0: 139 keys, 2172 bytes
+2024/10/29-08:34:31.371 8e54 Compacted 1@0 + 1@1 files => 2172 bytes
+2024/10/29-08:34:31.372 8e54 compacted to: files[ 0 1 1 0 0 0 0 ]
+2024/10/29-08:34:31.372 8e54 Delete type=2 #59
+2024/10/29-08:34:31.372 8e54 Manual compaction at level-0 from '\x00\x11\x01\x1f\x04\x03\x01\x03\x00N\x00E\x00W\x03\x00\x00\x00\x00\x00\x00L@\x03\x00 @\x8b^-yB\x00\x03\x00\x00\x00\x00\x00\x00\xf0?' @ 1882 : 1 .. '\x00\x12\x00\x00\x00' @ 0 : 0; will stop at (end)
